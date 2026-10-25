@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Our Story">
+<meta name="theme-color" content="#241433">
+<title>Our Story</title>
+<style>
+:root{
+  --night:#241433; --dusk:#3d2354; --rose:#ff9bb3; --apricot:#ffd6a5; --mist:#f6eefb; --soft:#c9b6dc;
+  --serif:"Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+  --sans:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;
+}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{font-family:var(--sans);color:var(--mist);background:radial-gradient(120% 90% at 50% 0%,var(--dusk),var(--night));overflow:hidden}
+#bg{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
+.screen{position:fixed;inset:0;padding-top:max(24px,env(safe-area-inset-top))!important;padding-bottom:max(24px,env(safe-area-inset-bottom))!important;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;opacity:0;visibility:hidden;transition:opacity .8s ease,visibility .8s}
+.screen.on{opacity:1;visibility:visible}
+h1,h2{font-family:var(--serif);font-weight:400;line-height:1.2}
+h1{font-size:clamp(2.2rem,7vw,4.2rem);max-width:14em}
+h2{font-size:clamp(1.5rem,4.5vw,2.4rem);max-width:20em}
+p.sub{margin-top:14px;color:var(--soft);font-size:1.05rem}
+.btn{margin-top:30px;font:inherit;font-size:1.05rem;color:var(--night);background:linear-gradient(135deg,var(--rose),var(--apricot));border:0;border-radius:999px;padding:14px 34px;cursor:pointer;box-shadow:0 6px 28px rgba(255,155,179,.35);transition:transform .2s}
+.btn:hover{transform:scale(1.05)}
+.btn:focus-visible,.nav:focus-visible,.opt:focus-visible{outline:3px solid var(--apricot);outline-offset:3px}
+.ghost{background:none;color:var(--mist);border:1px solid var(--soft);box-shadow:none}
+/* intro */
+#lines{min-height:12em;display:flex;flex-direction:column;justify-content:center;gap:18px;max-width:30em}
+#lines p{font-family:var(--serif);font-size:clamp(1.2rem,3.6vw,1.8rem);line-height:1.5;opacity:0;transform:translateY(8px);transition:opacity 1s,transform 1s}
+#lines p.show{opacity:1;transform:none}
+/* gallery */
+.frame{position:relative;width:min(88vw,720px);height:min(58vh,520px);display:flex;align-items:center;justify-content:center}
+.photo{max-width:100%;max-height:100%;border-radius:10px;border:10px solid var(--mist);box-shadow:0 18px 50px rgba(0,0,0,.5);transition:opacity .45s,transform .45s}
+.photo.out{opacity:0;transform:scale(.97)}
+.ph{width:100%;height:100%;border-radius:10px;border:2px dashed var(--soft);display:flex;align-items:center;justify-content:center;color:var(--soft);padding:20px}
+#cap{font-family:var(--serif);font-size:clamp(1.1rem,3vw,1.5rem);margin-top:22px;min-height:2.6em;max-width:28em;transition:opacity .45s}
+.bar{display:flex;align-items:center;gap:18px;margin-top:6px}
+.nav{font-size:1.5rem;color:var(--mist);background:rgba(255,255,255,.1);border:0;border-radius:50%;width:48px;height:48px;cursor:pointer}
+.nav:hover{background:rgba(255,255,255,.2)}
+#dots{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;max-width:260px}
+#dots i{width:8px;height:8px;border-radius:50%;background:var(--soft);opacity:.4}
+#dots i.cur{background:var(--rose);opacity:1}
+/* quiz */
+#opts{display:grid;gap:12px;margin-top:26px;width:min(90vw,460px)}
+.opt{font:inherit;color:var(--mist);background:rgba(255,255,255,.08);border:1px solid var(--soft);border-radius:14px;padding:14px 18px;cursor:pointer;transition:background .2s}
+.opt:hover:not([disabled]){background:rgba(255,255,255,.18)}
+.opt.good{background:#4c9f78;border-color:#4c9f78}
+.opt.bad{background:#a5506a;border-color:#a5506a}
+#fb{margin-top:18px;min-height:1.6em;color:var(--apricot);font-family:var(--serif);font-size:1.15rem;max-width:26em}
+#days{font-family:var(--serif);font-size:clamp(3rem,12vw,6rem);color:var(--rose)}
+#music{position:fixed;top:14px;right:14px;z-index:5;font-size:1.2rem;background:rgba(255,255,255,.1);color:var(--mist);border:0;border-radius:50%;width:42px;height:42px;cursor:pointer;display:none}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<button id="music" aria-label="Музыка">♪</button>
+
+<section class="screen" id="s-gift">
+  <h1>I got a gift for you</h1>
+  <p class="sub">Click the button and select the gift.json file I sent you.</p>
+  <label class="btn" for="file">Open Gift</label>
+  <input type="file" id="file" hidden>
+  <p id="gErr" class="sub" style="color:var(--apricot)"></p>
+</section>
+
+<section class="screen" id="s-welcome">
+  <h1 id="wTitle"></h1>
+  <p class="sub" id="wSub"></p>
+  <button class="btn" id="wBtn">Open</button>
+</section>
+
+<section class="screen" id="s-intro">
+  <div id="lines"></div>
+  <button class="btn" id="iBtn">Next</button>
+</section>
+
+<section class="screen" id="s-gallery">
+  <div class="frame" id="frame"></div>
+  <p id="cap"></p>
+  <div class="bar">
+    <button class="nav" id="prev" aria-label="Назад">‹</button>
+    <div id="dots"></div>
+    <button class="nav" id="next" aria-label="Вперёд">›</button>
+  </div>
+  <button class="btn ghost" id="auto">Enable Auto</button>
+</section>
+
+<section class="screen" id="s-quiz">
+  <p class="sub" id="qCount"></p>
+  <h2 id="qText"></h2>
+  <div id="opts"></div>
+  <p id="fb"></p>
+  <button class="btn" id="qBtn" style="visibility:hidden">Next</button>
+</section>
+
+<section class="screen" id="s-final">
+  <h2 id="fScore"></h2>
+  <div id="days"></div>
+  <p class="sub" id="fDaysLbl">days together</p>
+  <p id="fMsg" style="font-family:var(--serif);font-size:1.3rem;line-height:1.6;max-width:28em;margin-top:22px"></p>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
+    <button class="btn" id="burst">Another Heart</button>
+    <button class="btn ghost" id="again">View Again</button>
+  </div>
+</section>
+
+<script>
+/* ============ ЗДЕСЬ ТЫ МЕНЯЕШЬ ВСЁ ПОД СЕБЯ ============ */
+let CONFIG = {
+  herName: "大好きなあーちゃん",             // её имя
+  startDate: "2025-11-02",        // дата начала отношений (ГГГГ-ММ-ДД)
+  music: "",                      // например "music.mp3" (положи файл рядом) или оставь пустым
+  welcomeSub: "これは小さなプレゼントです。快適な姿勢でくつろいでください。",
+  intro: [                        // как всё начиналось: каждая строка появляется по клику
+    "すべては本当に何気ないことから始まった……",
+    "僕たちはたくさんメッセージをやり取りして、それから実際に会った",
+    "君がどれほど僕に会いたがっていたのか、僕は強く感じた……",
+    "あれからたくさんの日々が過ぎた。そして、その一日一日が嬉しい。"
+  ],
+  photos: [                       // положи фото в папку photos/ рядом с этим файлом
+    { src: "photos/1.jpg", caption: "僕たちはお互いに情熱的だった" },
+{ src: "photos/2.jpg", caption: "僕たちはお互いに会いたくて寂しかった" },
+{ src: "photos/3.jpg", caption: "僕たちは一緒にいた" },
+{ src: "photos/4.jpg", caption: "最高の瞬間を作り出した" },
+{ src: "photos/20.jpg", caption: "マルタで過ごした最後の温かな瞬間" },
+{ src: "photos/6.jpg", caption: "僕たちが一緒にいたあの日" },
+{ src: "photos/5.jpg", caption: "ビデオ通話でたくさん話した" },
+{ src: "photos/7.jpg", caption: "本当にたくさん..." },
+{ src: "photos/8.jpg", caption: "ものすごくたくさん..." },
+{ src: "photos/9.jpg", caption: "もっともっと..." },
+{ src: "photos/11.jpg", caption: "毎日" },
+{ src: "photos/12.jpg", caption: "途切れることなく" },
+{ src: "photos/13.jpg", caption: "いろんな感情を感じた" },
+{ src: "photos/14.jpg", caption: "お互いの好きなように時間を過ごした" },
+{ src: "photos/15.jpg", caption: "君との一番好きな写真" },
+{ src: "photos/16.jpg", caption: "猫と一緒にご飯を食べた" },
+{ src: "photos/17.jpg", caption: "旅をした" },
+{ src: "photos/10.jpg", caption: "一緒に喜んだ" },
+{ src: "photos/19.jpg", caption: "今も遠距離恋愛を続けている..." },
+{ src: "photos/18.jpg", caption: "でも、これからもずっと愛し合い、笑顔でいることをやめない" }
+  ],
+  quiz: [                       
+    { q: "Что мы посмотрели в первый раз?", options: ["InitialD", "About Time", "Табакошка"], answer: 1,
+      ok: "Надо будет пересмотреть вместе", no: "Не-а" },
+    { q: "Что я чувствовал когда увидел тебя впервые?", options: ["Она такая красивая...","Она невероятно вкусно пахнет","Такая маленькая!"], answer: 2,
+      ok: "Хехехе люблю тебя очень", no: "Это тоже верно:)" },
+      { q: "Что я не люблю больше всего?", options: ["Других парней рядом с тобой!","Мою самооценку","Учебу"], answer: 0,
+      ok: "Верно! Им нет места рядом с тобой!", no: "Ну почти" }
+  ],
+  finale: "Спасибо, что ты рядом. С годовщиной, моя любимая Ачан. Мы прошли этот год вместе.Впереди ещё много историй."
+};
+/* ======================================================== */
+
+const $ = id => document.getElementById(id);
+const show = id => { document.querySelectorAll('.screen').forEach(s => s.classList.remove('on')); $(id).classList.add('on'); };
+
+/* --- фон: плывущие сердечки и звёзды --- */
+const cv = $('bg'), cx = cv.getContext('2d');
+let W, H, bits = [];
+const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function resize(){ W = cv.width = innerWidth; H = cv.height = innerHeight; }
+addEventListener('resize', resize); resize();
+const mk = (burstX, burstY) => ({
+  x: burstX ?? Math.random()*W, y: burstY ?? H + Math.random()*H*.3,
+  s: 8 + Math.random()*18, v: .25 + Math.random()*.6, dx: (Math.random()-.5)*.6,
+  a: .15 + Math.random()*.35, ch: Math.random() < .65 ? '♥' : '✦',
+  c: Math.random() < .5 ? '#ff9bb3' : '#ffd6a5', burst: burstX !== undefined
+});
+for (let i = 0; i < 38; i++){ const b = mk(); b.y = Math.random()*H; bits.push(b); }
+function tick(){
+  cx.clearRect(0,0,W,H);
+  bits.forEach((b,i) => {
+    b.y -= b.v * (b.burst ? 5 : 1); b.x += b.dx + Math.sin(b.y/60)*.3;
+    if (b.burst) b.a -= .008;
+    cx.globalAlpha = Math.max(b.a,0); cx.fillStyle = b.c; cx.font = b.s + 'px serif';
+    cx.fillText(b.ch, b.x, b.y);
+    if (b.y < -30 || b.a <= 0){ if (b.burst) bits.splice(i,1); else bits[i] = mk(); }
+  });
+  if (!still) requestAnimationFrame(tick);
+}
+tick();
+function burst(){ for (let i=0;i<40;i++){ const b = mk(W/2 + (Math.random()-.5)*W*.5, H*.75); b.a = .8; b.s = 14+Math.random()*24; bits.push(b);} if (still) tick(); }
+
+/* --- музыка --- */
+const audio = new Audio(); let playing = false;
+$('music').onclick = () => { playing ? audio.pause() : audio.play(); playing = !playing; $('music').style.opacity = playing ? 1 : .5; };
+
+/* --- приветствие --- */
+function applyConfig(){
+  $('wTitle').textContent = '記念日おめでとう, ' + CONFIG.herName;
+  $('wSub').textContent = CONFIG.welcomeSub;
+  if (CONFIG.music){ audio.src = CONFIG.music; audio.loop = true; $('music').style.display = 'block'; }
+}
+$('wBtn').onclick = () => { if (CONFIG.music && !playing){ audio.play().then(()=>{playing=true;}).catch(()=>{}); } startIntro(); };
+
+/* --- вступление --- */
+let li = 0;
+function startIntro(){
+  li = 0; $('lines').innerHTML = ''; $('iBtn').textContent = 'Дальше'; show('s-intro'); nextLine();
+}
+function nextLine(){
+  const p = document.createElement('p'); p.textContent = CONFIG.intro[li];
+  $('lines').appendChild(p); requestAnimationFrame(() => requestAnimationFrame(() => p.classList.add('show')));
+  li++; if (li >= CONFIG.intro.length) $('iBtn').textContent = 'Смотреть наши фото';
+}
+$('iBtn').onclick = () => { li < CONFIG.intro.length ? nextLine() : startGallery(); };
+
+/* --- галерея --- */
+let pi = 0, timer = null;
+function startGallery(){
+  pi = 0; $('dots').innerHTML = CONFIG.photos.map(() => '<i></i>').join(''); render(true); show('s-gallery');
+}
+function render(first){
+  const p = CONFIG.photos[pi], fr = $('frame');
+  const apply = () => {
+    fr.innerHTML = '';
+    const img = new Image(); img.className = 'photo'; img.alt = p.caption; img.src = p.src;
+    img.onerror = () => { fr.innerHTML = '<div class="ph">Фото не загрузилось</div>'; };
+    fr.appendChild(img);
+    $('cap').textContent = p.caption; $('cap').style.opacity = 1;
+    [...$('dots').children].forEach((d,i) => d.classList.toggle('cur', i === pi));
+  };
+  if (first) return apply();
+  const old = fr.firstChild; if (old) old.classList.add('out'); $('cap').style.opacity = 0;
+  setTimeout(apply, 400);
+}
+function go(d){
+  const n = pi + d;
+  if (n >= CONFIG.photos.length){ stopAuto(); return startQuiz(); }
+  if (n < 0) return; pi = n; render();
+}
+function stopAuto(){ clearInterval(timer); timer = null; $('auto').textContent = 'Включить автопоказ'; }
+$('prev').onclick = () => go(-1); $('next').onclick = () => go(1);
+$('auto').onclick = () => {
+  if (timer) return stopAuto();
+  $('auto').textContent = 'Остановить автопоказ'; timer = setInterval(() => go(1), 4500);
+};
+addEventListener('keydown', e => {
+  if (!$('s-gallery').classList.contains('on')) return;
+  if (e.key === 'ArrowRight') go(1); if (e.key === 'ArrowLeft') go(-1);
+});
+let tx = 0;
+$('s-gallery').addEventListener('touchstart', e => tx = e.touches[0].clientX);
+$('s-gallery').addEventListener('touchend', e => { const d = e.changedTouches[0].clientX - tx; if (Math.abs(d) > 50) go(d < 0 ? 1 : -1); });
+
+/* --- квиз --- */
+let qi = 0, score = 0;
+function startQuiz(){ qi = 0; score = 0; showQ(); show('s-quiz'); }
+function showQ(){
+const q = CONFIG.quiz[qi];
+$('qCount').textContent = '質問 ' + (qi + 1) + ' / ' + CONFIG.quiz.length;
+$('qText').textContent = q.q;
+$('fb').textContent = '';
+$('qBtn').style.visibility = 'hidden';
+$('qBtn').textContent = qi === CONFIG.quiz.length - 1 ? '結果を見る' : '次へ';
+$('opts').innerHTML = '';
+  q.options.forEach((t,i) => {
+    const b = document.createElement('button'); b.className = 'opt'; b.textContent = t;
+    b.onclick = () => {
+      const right = i === q.answer; if (right) score++;
+      [...$('opts').children].forEach((o,k) => { o.disabled = true; if (k === q.answer) o.classList.add('good'); });
+      if (!right) b.classList.add('bad');
+      $('fb').textContent = right ? q.ok : q.no; $('qBtn').style.visibility = 'visible'; if (right) burst();
+    };
+    $('opts').appendChild(b);
+  });
+}
+$('qBtn').onclick = () => { qi++; qi < CONFIG.quiz.length ? showQ() : startFinal(); };
+
+/* --- финал --- */
+function startFinal(){
+  const days = Math.max(0, Math.floor((Date.now() - new Date(CONFIG.startDate)) / 864e5));
+  $('fScore').textContent = '全' + CONFIG.quiz.length + '問中' + score + '問正解';
+  $('days').textContent = days;
+  $('fMsg').textContent = CONFIG.finale;
+  show('s-final');
+  setTimeout(burst, 600);
+}
+$('burst').onclick = burst;
+$('again').onclick = () => { show('s-welcome'); };
+
+/* --- подарок: хранится на телефоне (IndexedDB), в сеть не уходит --- */
+const idb = () => new Promise((res, rej) => { const r = indexedDB.open('gift', 1); r.onupgradeneeded = () => r.result.createObjectStore('k'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+const idbGet = async () => { const d = await idb(); return new Promise(res => { const q = d.transaction('k').objectStore('k').get('gift'); q.onsuccess = () => res(q.result); q.onerror = () => res(null); }); };
+const idbSet = async v => { const d = await idb(); return new Promise((res, rej) => { const t = d.transaction('k', 'readwrite'); t.objectStore('k').put(v, 'gift'); t.oncomplete = res; t.onerror = () => rej(t.error); }); };
+$('file').onchange = async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try {
+    const g = JSON.parse(await f.text()); if (!Array.isArray(g.photos) || !g.photos.length) throw 0;
+    await idbSet(g); if (navigator.storage && navigator.storage.persist) navigator.storage.persist();
+    CONFIG = g; applyConfig(); show('s-welcome');
+  } catch (_) { $('gErr').textContent = 'Не получилось открыть файл. Проверь, что выбран gift.json.'; }
+};
+(async () => {
+  try { const g = await idbGet(); if (g){ CONFIG = g; applyConfig(); return show('s-welcome'); } } catch (_) {}
+  show('s-gift');
+})();
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+</script>
+</body>
+</html>
