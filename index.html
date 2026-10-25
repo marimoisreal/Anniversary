@@ -204,12 +204,12 @@ $('wBtn').onclick = () => { if (CONFIG.music && !playing){ audio.play().then(()=
 /* --- вступление --- */
 let li = 0;
 function startIntro(){
-  li = 0; $('lines').innerHTML = ''; $('iBtn').textContent = 'Дальше'; show('s-intro'); nextLine();
+  li = 0; $('lines').innerHTML = ''; $('iBtn').textContent = 'Continue'; show('s-intro'); nextLine();
 }
 function nextLine(){
   const p = document.createElement('p'); p.textContent = CONFIG.intro[li];
   $('lines').appendChild(p); requestAnimationFrame(() => requestAnimationFrame(() => p.classList.add('show')));
-  li++; if (li >= CONFIG.intro.length) $('iBtn').textContent = 'Смотреть наши фото';
+  li++; if (li >= CONFIG.intro.length) $('iBtn').textContent = 'View Our Photos';
 }
 $('iBtn').onclick = () => { li < CONFIG.intro.length ? nextLine() : startGallery(); };
 
@@ -237,11 +237,11 @@ function go(d){
   if (n >= CONFIG.photos.length){ stopAuto(); return startQuiz(); }
   if (n < 0) return; pi = n; render();
 }
-function stopAuto(){ clearInterval(timer); timer = null; $('auto').textContent = 'Включить автопоказ'; }
+function stopAuto(){ clearInterval(timer); timer = null; $('auto').textContent = 'Enable Auto Play'; }
 $('prev').onclick = () => go(-1); $('next').onclick = () => go(1);
 $('auto').onclick = () => {
   if (timer) return stopAuto();
-  $('auto').textContent = 'Остановить автопоказ'; timer = setInterval(() => go(1), 4500);
+  $('auto').textContent = 'Stop Auto Play'; timer = setInterval(() => go(1), 4500);
 };
 addEventListener('keydown', e => {
   if (!$('s-gallery').classList.contains('on')) return;
